@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Analyse saisonnière - Gestion financière</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+<div class="container">
+    <h2>Application de Gestion Financière et Budgétaire</h2>
+    
+    <div class="controls">
+        <div class="annee-control">
+            <label>Années disponibles: </label>
+            <select id="anneeSelect">
+                <option value="">Sélectionner une année à charger</option>
+                {% for annee in annees_disponibles %}
+                <option value="{{ annee }}">{{ annee }}</option>
+                {% endfor %}
+            </select>
+            <button onclick="chargerDonnees()" class="btn-primary">Charger année</button>
+        </div>
+        
+        <div class="annee-control">
+            <label>Ajouter nouvelle année: </label>
+            <input type="number" id="nouvelleAnnee" min="1990" max="2100">
+            <button onclick="ajouterAnnee()">Ajouter</button>
+        </div>
+        
+        <div class="annee-control">
+            <label>Supprimer année: </label>
+            <select id="anneeSupprimer">
+                <option value="">Sélectionner une année</option>
+                {% for annee in annees_disponibles %}
+                <option value="{{ annee }}">{{ annee }}</option>
+                {% endfor %}
+            </select>
+            <button onclick="supprimerAnnee()" class="btn-danger">Supprimer</button>
+        </div>
+    </div>
+    
+    <form method="post" id="dataForm">
+        <input type="hidden" name="action" id="action" value="calculer">
+        <input type="hidden" name="data" id="dataJson">
+        
+        <table id="dataTable">
+            <thead>
+                <tr>
+                    <th>Année</th>
+                    <th>Jan</th><th>Fév</th><th>Mar</th><th>Avr</th>
+                    <th>Mai</th><th>Juin</th><th>Juil</th><th>Aoû</th>
+                    <th>Sep</th><th>Oct</th><th>Nov</th><th>Déc</th>
+                </tr>
+            </thead>
+            <tbody id="tableBody">
+                <!-- Les lignes seront générées dynamiquement -->
+            </tbody>
+        </table>
+        
+        <div>
+            <button type="button" onclick="ajouterLigne()">Ajouter année</button>
+            <button type="button" onclick="supprimerDerniereLigne()">Supprimer dernière année</button>
+            <button type="button" onclick="calculer()">Calculer statistiques</button>
+            <button type="button" onclick="sauvegarder()">Sauvegarder dans BD</button>
+            <label>
+                <input type="checkbox" id="sauvegardeAuto"> Sauvegarde automatique
+            </label>
+        </div>
+    </form>
+    
+    <div id="resultContainer">
+        {% if result %}
+            {% if result.error %}
+                <div class="error">{{ result.error }}</div>
+            {% elif result.success %}
+                <div class="success">{{ result.success }}</div>
+            {% elif result.moyenne_generale %}
+                <div class="results">
+                    <h3>Résultats de l'analyse</h3>
+                    <p><strong>Moyenne générale:</strong> {{ result.moyenne_generale }}</p>
+                    
+                    <h4>Moyennes mensuelles:</h4>
+                    <ul>
+                        {% for m in result.moyennes %}
+                            <li>{{ m }}</li>
+                        {% endfor %}
+                    </ul>
+                    
+                    <h4>Coefficients saisonniers:</h4>
+                    <ul>
+                        {% for c in result.coefficients %}
+                            <li>{{ c }}</li>
+                        {% endfor %}
+                    </ul>
+                </div>
+            {% endif %}
+        {% endif %}
+    </div>
+</div>
+
+<script src="{{ url_for('static', filename='script.js') }}"></script>
+</body>
+</html>
