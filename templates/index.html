@@ -5,100 +5,232 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Analyse saisonnière - Gestion financière</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
-</head>
+  </head>
 <body>
 <div class="container">
     <h2>Application de Gestion Financière et Budgétaire</h2>
     
-    <div class="controls">
-        <div class="annee-control">
-            <label>Années disponibles: </label>
-            <select id="anneeSelect">
-                <option value="">Sélectionner une année à charger</option>
-                {% for annee in annees_disponibles %}
-                <option value="{{ annee }}">{{ annee }}</option>
-                {% endfor %}
-            </select>
-            <button onclick="chargerDonnees()" class="btn-primary">Charger année</button>
+
+    <!-- Onglets de navigation -->
+    <div class="tabs">
+        <button class="tab active" onclick="switchTab('analyse')">📈 Analyse Saisonnière</button>
+        <button class="tab" onclick="switchTab('crud')">✏️ Gestion des Données</button>
+        <button class="tab" onclick="switchTab('dashboard')">📊 Statistiques</button>
+    </div>
+
+
+    <div id="analyse" class="tab-content active">
+           <!-- NOUVEAU : Contrôles de période -->
+        <div class="period-controls">
+            <h3>📊 Configuration de l'analyse</h3>
+            <div>
+                <label>Type de chargement:</label>
+                <select id="chargementType" onchange="toggleChargementMode()">
+                    <option value="single">Charger une seule année</option>
+                    <option value="range">Charger une période (2-5 ans)</option>
+                    <option value="all">Charger toutes les années</option>
+                </select>
+            </div>
+            
+            <div id="singleMode" style="margin-top: 10px;">
+                <label>Année:</label>
+                <select id="anneeSelect">
+                    <option value="">Sélectionner une année</option>
+                    {% for annee in annees_disponibles %}
+                    <option value="{{ annee }}">{{ annee }}</option>
+                    {% endfor %}
+                </select>
+                <button onclick="chargerDonnees()" class="btn-primary">Charger l'année</button>
+            </div>
+            
+            <div id="rangeMode" style="display: none; margin-top: 10px;">
+                <label>Période de:</label>
+                <select id="anneeDebut">
+                    {% for annee in annees_disponibles %}
+                    <option value="{{ annee }}">{{ annee }}</option>
+                    {% endfor %}
+                </select>
+                
+                <label>à:</label>
+                <select id="anneeFin">
+                    {% for annee in annees_disponibles %}
+                    <option value="{{ annee }}">{{ annee }}</option>
+                    {% endfor %}
+                </select>
+                
+                <label>Nombre d'années:</label>
+                <span id="nbAnneesRange" class="range-indicator">0</span>
+                
+                <button onclick="chargerPeriode()" class="btn-primary">Charger la période</button>
+                <button onclick="chargerDernieresAnnees()" class="btn-primary">Charger les 5 dernières années</button>
+            </div>
+            
+            <div id="allMode" style="display: none; margin-top: 10px;">
+                <button onclick="chargerToutesAnnees()" class="btn-primary">Charger TOUTES les années</button>
+            </div>
         </div>
         
-        <div class="annee-control">
-            <label>Ajouter nouvelle année: </label>
-            <input type="number" id="nouvelleAnnee" min="1990" max="2100">
-            <button onclick="ajouterAnnee()">Ajouter</button>
-        </div>
+        <!-- Formulaire principal -->
+        <form method="post" id="dataForm">
+            <input type="hidden" name="action" id="action" value="calculer">
+            <input type="hidden" name="data" id="dataJson">
+            
+            <table id="dataTable">
+                <thead>
+                    <tr>
+                        <th>Année</th>
+                        <th>Jan</th><th>Fév</th><th>Mar</th><th>Avr</th>
+                        <th>Mai</th><th>Juin</th><th>Juil</th><th>Aoû</th>
+                        <th>Sep</th><th>Oct</th><th>Nov</th><th>Déc</th>
+                    </tr>
+                </thead>
+                <tbody id="tableBody">
+                    <!-- Les lignes seront générées dynamiquement -->
+                </tbody>
+            </table>
+            
+            <div>
+                <button type="button" onclick="ajouterLigne()">Ajouter année</button>
+                <button type="button" onclick="supprimerDerniereLigne()">Supprimer dernière année</button>
+                <button type="button" onclick="calculer()">Calculer statistiques</button>
+                <button type="button" onclick="sauvegarder()">Sauvegarder dans BD</button>
+                <label>
+                    <input type="checkbox" id="sauvegardeAuto"> Sauvegarde automatique
+                </label>
+            </div>
+        </form>
         
-        <div class="annee-control">
-            <label>Supprimer année: </label>
-            <select id="anneeSupprimer">
-                <option value="">Sélectionner une année</option>
-                {% for annee in annees_disponibles %}
-                <option value="{{ annee }}">{{ annee }}</option>
-                {% endfor %}
-            </select>
-            <button onclick="supprimerAnnee()" class="btn-danger">Supprimer</button>
+        <div id="resultContainer">
+            <!-- Résultats affichés ici -->
         </div>
     </div>
-    
-    <form method="post" id="dataForm">
-        <input type="hidden" name="action" id="action" value="calculer">
-        <input type="hidden" name="data" id="dataJson">
-        
-        <table id="dataTable">
-            <thead>
-                <tr>
-                    <th>Année</th>
-                    <th>Jan</th><th>Fév</th><th>Mar</th><th>Avr</th>
-                    <th>Mai</th><th>Juin</th><th>Juil</th><th>Aoû</th>
-                    <th>Sep</th><th>Oct</th><th>Nov</th><th>Déc</th>
-                </tr>
-            </thead>
-            <tbody id="tableBody">
-                <!-- Les lignes seront générées dynamiquement -->
-            </tbody>
-        </table>
-        
-        <div>
-            <button type="button" onclick="ajouterLigne()">Ajouter année</button>
-            <button type="button" onclick="supprimerDerniereLigne()">Supprimer dernière année</button>
-            <button type="button" onclick="calculer()">Calculer statistiques</button>
-            <button type="button" onclick="sauvegarder()">Sauvegarder dans BD</button>
-            <label>
-                <input type="checkbox" id="sauvegardeAuto"> Sauvegarde automatique
-            </label>
-        </div>
-    </form>
-    
-    <div id="resultContainer">
-        {% if result %}
-            {% if result.error %}
-                <div class="error">{{ result.error }}</div>
-            {% elif result.success %}
-                <div class="success">{{ result.success }}</div>
-            {% elif result.moyenne_generale %}
-                <div class="results">
-                    <h3>Résultats de l'analyse</h3>
-                    <p><strong>Moyenne générale:</strong> {{ result.moyenne_generale }}</p>
-                    
-                    <h4>Moyennes mensuelles:</h4>
-                    <ul>
-                        {% for m in result.moyennes %}
-                            <li>{{ m }}</li>
-                        {% endfor %}
-                    </ul>
-                    
-                    <h4>Coefficients saisonniers:</h4>
-                    <ul>
-                        {% for c in result.coefficients %}
-                            <li>{{ c }}</li>
-                        {% endfor %}
-                    </ul>
+
+
+
+
+
+  <!-- Onglet 2: Gestion des Données (CRUD) - Version Simplifiée -->
+    <div id="crud" class="tab-content">
+        <div class="crud-card">
+            <div class="crud-header">
+                <h3>📝 Gestion des données financières</h3>
+                <div>
+                    <button onclick="ajouterNouvelleAnneeCrud()" class="btn btn-success">➕ Ajouter une année</button>
+                    <button onclick="sauvegarderToutesDonneesCrud()" class="btn btn-primary">💾 Sauvegarder toutes les modifications</button>
                 </div>
-            {% endif %}
-        {% endif %}
+            </div>
+            
+            <div style="overflow-x: auto; max-height: 600px; overflow-y: auto;">
+                <table class="data-table" id="crudDataTable">
+                    <thead style="position: sticky; top: 0; background: white; z-index: 10;">
+                        <tr>
+                            <th style="min-width: 80px;">Année</th>
+                            <th>Janvier</th><th>Février</th><th>Mars</th><th>Avril</th>
+                            <th>Mai</th><th>Juin</th><th>Juillet</th><th>Août</th>
+                            <th>Septembre</th><th>Octobre</th><th>Novembre</th><th>Décembre</th>
+                            <th style="min-width: 100px;">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="crudTableBody">
+                        <!-- Les données seront chargées dynamiquement -->
+                    </tbody>
+                </table>
+            </div>
+            
+            <div style="margin-top: 20px; padding: 10px; background: #e3f2fd; border-radius: 8px; text-align: center;">
+                <strong>📊 Info:</strong> <span id="crudStats">Chargement des données...</span>
+            </div>
+        </div>
     </div>
+
+
+
+    <!-- Onglet 3: Dashboard -->
+    <div id="dashboard" class="tab-content">
+        <div class="metrics-grid">
+            <div class="metric-card">
+                <h3>Total des revenus</h3>
+                <div class="metric-value" id="totalRevenus">0 AR</div>
+            </div>
+            <div class="metric-card">
+                <h3>Moyenne mensuelle</h3>
+                <div class="metric-value" id="moyenneMensuelle">0 AR</div>
+            </div>
+            <div class="metric-card">
+                <h3>Meilleur mois</h3>
+                <div class="metric-value" id="meilleurMois">-</div>
+            </div>
+            <div class="metric-card">
+                <h3>Nombre d'années</h3>
+                <div class="metric-value" id="nbAnnees">0</div>
+            </div>
+        </div>
+        
+        <div class="crud-card">
+            <h3>📈 Évolution annuelle</h3>
+            <canvas id="evolutionChart" style="max-height: 400px;"></canvas>
+        </div>
+        
+        <div class="crud-card">
+            <h3>📊 Distribution mensuelle</h3>
+            <canvas id="distributionChart" style="max-height: 400px;"></canvas>
+        </div>
+    </div>
+
+</div>
 </div>
 
 <script src="{{ url_for('static', filename='script.js') }}"></script>
+<script src="{{ url_for('static', filename='chart.min.js') }}"></script>
+
+<script>
+    // Fonction pour afficher/masquer les modes
+    function toggleChargementMode() {
+        const mode = document.getElementById('chargementType').value;
+        document.getElementById('singleMode').style.display = mode === 'single' ? 'block' : 'none';
+        document.getElementById('rangeMode').style.display = mode === 'range' ? 'block' : 'none';
+        document.getElementById('allMode').style.display = mode === 'all' ? 'block' : 'none';
+        
+        // Mettre à jour l'indicateur de nombre d'années
+        if (mode === 'range') {
+            updateNbAnneesRange();
+        }
+    }
+    
+    // Mettre à jour l'indicateur du nombre d'années dans la période
+    function updateNbAnneesRange() {
+        const debut = parseInt(document.getElementById('anneeDebut').value);
+        const fin = parseInt(document.getElementById('anneeFin').value);
+        if (debut && fin && fin >= debut) {
+            const nbAnnees = fin - debut + 1;
+            const span = document.getElementById('nbAnneesRange');
+            span.textContent = `${nbAnnees} an${nbAnnees > 1 ? 's' : ''}`;
+            
+            if (nbAnnees > 5) {
+                span.style.backgroundColor = '#ff9800';
+                span.innerHTML += ' ⚠️ Max recommandé: 5 ans';
+            } else if (nbAnnees < 2) {
+                span.style.backgroundColor = '#ff9800';
+                span.innerHTML += ' ⚠️ Min 2 ans pour analyse';
+            } else {
+                span.style.backgroundColor = '#4caf50';
+            }
+        }
+    }
+    
+    // Initialisation des événements
+    document.addEventListener('DOMContentLoaded', function() {
+        const anneeDebut = document.getElementById('anneeDebut');
+        const anneeFin = document.getElementById('anneeFin');
+        
+        if (anneeDebut && anneeFin) {
+            anneeDebut.addEventListener('change', updateNbAnneesRange);
+            anneeFin.addEventListener('change', updateNbAnneesRange);
+            updateNbAnneesRange();
+        }
+        
+        toggleChargementMode();
+    });
+</script>
 </body>
 </html>
