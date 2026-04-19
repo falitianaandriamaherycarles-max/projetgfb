@@ -431,7 +431,6 @@ def api_crud_liste():
                 "annee": d.annee_ref.annee,
                 "mois": d.mois,
                 "valeur": d.valeur,
-                "commentaire": d.commentaire,
                 "date_creation": d.date_creation.isoformat() if d.date_creation else None
             })
         

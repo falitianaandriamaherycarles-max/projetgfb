@@ -36,8 +36,7 @@ class DonneeFinanciere(Base):
     mois = Column(Integer, nullable=False)  # 1-12
     valeur = Column(Float, nullable=False)
     date_creation = Column(Date, default=datetime.now().date())
-    commentaire = Column(String(255), nullable=True)
-    
+        
     # Relation avec AnneeReference
     annee_ref = relationship("AnneeReference", back_populates="donnees")
     

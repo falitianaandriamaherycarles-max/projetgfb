@@ -26,7 +26,7 @@ td, th {
 }
 
 th {
-    background-color: #4CAF50;
+    background-color: #2E5AA7;
     color: white;
 }
 
@@ -37,7 +37,7 @@ input {
 }
 
 button {
-    background-color: #4CAF50;
+    background-color: #2E5AA7;
     color: white;
     padding: 10px 20px;
     margin: 10px 5px;
@@ -47,15 +47,15 @@ button {
 }
 
 button:hover {
-    background-color: #45a049;
+    background-color: #606f89;
 }
 
 .btn-danger {
-    background-color: #f44336;
+    background-color: #dd0b16;
 }
 
 .btn-danger:hover {
-    background-color: #da190b;
+    background-color: #75070C;
 }
 
 .btn-primary {
@@ -77,7 +77,7 @@ button:hover {
 }
 
 .success {
-    color: green;
+    color: #b7e34f;
     padding: 10px;
     background-color: #e8f5e8;
     border-radius: 5px;
@@ -122,7 +122,7 @@ button:hover {
     display: inline-block;
     margin-left: 20px;
     padding: 5px 10px;
-    background: #4caf50;
+    background: #2E5AA7;
     color: white;
     border-radius: 5px;
     font-size: 12px;
@@ -199,7 +199,7 @@ button:hover {
 }
 
 .metric-card {
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    background: linear-gradient(135deg, #b7e34f 0%, #86C5FF  100%);
     color: white;
     padding: 20px;
     border-radius: 10px;
@@ -215,7 +215,6 @@ button:hover {
   /* Navigation par onglets */
 .tabs {
     display: flex;
-    background: #f8f9fa;
     border-bottom: 2px solid #dee2e6;
     padding: 0 20px;
 }
@@ -233,12 +232,12 @@ button:hover {
 }
 
 .tab:hover {
-    color: #667eea;
+    color: #86C5FF;
     background: #f1f3f5;
 }
 
 .tab.active {
-    color: #667eea;
+    color: #86C5FF;
 }
 
 .tab.active::after {
@@ -248,7 +247,7 @@ button:hover {
     left: 0;
     right: 0;
     height: 2px;
-    background: #667eea;
+    background: #86C5FF;
 }
 
 /* Contenu des onglets */
