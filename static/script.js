@@ -10,7 +10,13 @@ function rafraichirTableau() {
     const annees = Object.keys(data).sort();
     
     if (annees.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="13" style="text-align: center;">Aucune donnée chargée. Veuillez charger des données.</td></tr>';
+        tbody.innerHTML = `
+            <tr>
+                <td colspan="14" style="text-align: center; padding: 40px; color: #6c757d; background: #f8f9fa;">
+                    <i class="fa-solid fa-circle-info"></i> Aucune donnée disponible. Veuiller charger les données.
+                  </td>
+              </tr>
+        `;
         return;
     }
     
@@ -21,9 +27,11 @@ function rafraichirTableau() {
         // Cellule année avec style
         const cellAnnee = row.insertCell(0);
         cellAnnee.innerHTML = `<strong>${annee}</strong>`;
-        cellAnnee.style.backgroundColor = '#e3f2fd';
+        cellAnnee.style.backgroundColor = '#faf8e3';
         cellAnnee.style.fontWeight = 'bold';
         cellAnnee.style.textAlign = 'center';
+        
+        let totalAnnee = 0;
         
         // Cellules des mois (affichage texte, non éditable)
         for (let j = 0; j < 12; j++) {
@@ -36,6 +44,7 @@ function rafraichirTableau() {
                 cell.innerHTML = `<span style="font-weight: 500; color: #2c3e50;">${valeurNum.toLocaleString()}</span>`;
                 cell.style.textAlign = 'right';
                 cell.style.padding = '8px';
+                totalAnnee += valeurNum;
             } else {
                 cell.innerHTML = '<span style="color: #999;">-</span>';
                 cell.style.textAlign = 'center';
@@ -45,40 +54,26 @@ function rafraichirTableau() {
             // Ajouter un style au survol
             cell.style.backgroundColor = i % 2 === 0 ? '#fafafa' : '#ffffff';
         }
+        
+        // Calculer la moyenne sur 12 mois (les mois vides = 0)
+        const cellTotal = row.insertCell(13);
+        const moyenneAnnee = totalAnnee / 12;
+        
+        // Cellule Moyenne Année - toujours avec 2 décimales
+        if (moyenneAnnee > 0) {
+            cellTotal.innerHTML = `<strong style="color: #E25;">${moyenneAnnee.toFixed(2).toLocaleString()} AR</strong>`;
+        } else {
+            cellTotal.innerHTML = '<span style="color: #999;">-</span>';
+        }
+        cellTotal.style.textAlign = 'right';
+        cellTotal.style.padding = '8px';
+        cellTotal.style.fontWeight = 'bold';
+        cellTotal.style.backgroundColor = i % 2 === 0 ? '#faf8e3' : '#fff3e0';
+        cellTotal.style.borderLeft = '2px solid #E25';
     }
 }
 
 // ========== FONCTIONS DE CHARGEMENT ==========
-function chargerDonnees() {
-    const annee = document.getElementById('anneeSelect').value;
-    if (!annee) {
-        alert('Veuillez sélectionner une année');
-        return;
-    }
-    
-    console.log(`Chargement de l'année ${annee}...`);
-    
-    const resultContainer = document.getElementById('resultContainer');
-    resultContainer.innerHTML = '<div class="success">Chargement en cours...</div>';
-    
-    fetch(`/api/charger/${annee}`)
-        .then(response => response.json())
-        .then(result => {
-            if (result.success && result.data) {
-                data = result.data;
-                rafraichirTableau();
-                resultContainer.innerHTML = '<div class="success"><i class="fa-solid fa-check"></i> Données chargées avec succès!</div>';
-                console.log("Données chargées:", data);
-            } else {
-                resultContainer.innerHTML = `<div class="error"><i class="fa-regular fa-circle-xmark"></i> Erreur: ${result.error || 'Année non trouvée'}</div>`;
-            }
-        })
-        .catch(error => {
-            console.error('Erreur:', error);
-            resultContainer.innerHTML = '<div class="error"><i class="fa-regular fa-circle-xmark"></i> Erreur de connexion au serveur</div>';
-        });
-}
-
 function chargerPeriode() {
     const anneeDebut = parseInt(document.getElementById('anneeDebut').value);
     const anneeFin = parseInt(document.getElementById('anneeFin').value);
@@ -109,7 +104,7 @@ function chargerPeriode() {
     console.log(`Chargement de la période ${anneeDebut} à ${anneeFin}...`);
     
     const resultContainer = document.getElementById('resultContainer');
-    resultContainer.innerHTML = `<div class="success">📥 Chargement de ${nbAnnees} années en cours...</div>`;
+    resultContainer.innerHTML = `<div class="success"><i class="fa-solid fa-spinner"></i> Chargement de ${nbAnnees} années en cours...</div>`;
     
     fetch(`/api/charger_periode/${anneeDebut}/${anneeFin}`)
         .then(response => response.json())
@@ -126,7 +121,7 @@ function chargerPeriode() {
                     <div class="success">
                         <i class="fa-solid fa-check"></i> Période chargée avec succès!<br>
                         <i class="fa-solid fa-chart-column"></i> ${nbAnneesChargees} années chargées<br>
-                        💰 ${nbValeurs} valeurs non nulles
+                        <i class="fa-solid fa-sack-dollar"></i> ${nbValeurs} valeurs non nulles
                     </div>
                 `;
             } else {
@@ -143,7 +138,7 @@ function chargerDernieresAnnees(nbAnnees = 5) {
     console.log(`Chargement des ${nbAnnees} dernières années...`);
     
     const resultContainer = document.getElementById('resultContainer');
-    resultContainer.innerHTML = `<div class="success">📥 Chargement des ${nbAnnees} dernières années...</div>`;
+    resultContainer.innerHTML = `<div class="success"><i class="fa-solid fa-spinner"></i> Chargement des ${nbAnnees} dernières années...</div>`;
     
     fetch(`/api/charger_dernieres_annees/${nbAnnees}`)
         .then(response => response.json())
@@ -175,7 +170,7 @@ function chargerToutesAnnees() {
     console.log("Chargement de toutes les années...");
     
     const resultContainer = document.getElementById('resultContainer');
-    resultContainer.innerHTML = '<div class="success">📥 Chargement de toutes les années...</div>';
+    resultContainer.innerHTML = '<div class="success"><i class="fa-solid fa-spinner"></i> Chargement de toutes les années...</div>';
     
     fetch('/api/charger_toutes_annees')
         .then(response => response.json())
@@ -199,6 +194,7 @@ function chargerToutesAnnees() {
             resultContainer.innerHTML = '<div class="error"><i class="fa-regular fa-circle-xmark"></i> Erreur de connexion au serveur</div>';
         });
 }
+
 
 function calculer() {
     console.log("Calcul des statistiques...");
@@ -235,15 +231,22 @@ function calculer() {
             // Calculer la prévision basée sur la dernière année analysée
             const prevision = calculerPrevisionAvecDerniereAnnee(stats, data, derniereAnneeAnalysee);
             
+            // Calculer le total des coefficients saisonniers
+            const totalCoefficients = stats.coefficients.reduce((sum, c) => sum + c, 0);
+            const moyenneCoefficients = (totalCoefficients / 12).toFixed(2);
+            
+            // Calculer la moyenne annuelle
+            const moyenneAnnuelle = stats.moyenne_generale * 12;
+            
             let html = `
-                <div class="results" style="margin-top: 20px; padding: 20px; background: #f8f9fa; border-radius: 8px;">
-                    <h3 style="text-align: center; margin-bottom: 20px;"><i class="fa-solid fa-arrow-trend-up"></i> Résultats de l'analyse saisonnière</h3>
+                <div class="results" style="margin-top: 20px; padding: 20px; background: #fff; border-radius: 8px;">
+                    <h3 style="text-align: center; margin-bottom: 20px;"><i class="fa-solid fa-square-poll-vertical"></i> Résultats de l'analyse saisonnière</h3>
                     
                     <!-- Informations sur la période analysée -->
-                    <div style="background: #e3f2fd; border-radius: 8px; padding: 10px 15px; margin-bottom: 20px; text-align: center;">
-                        <strong><i class="fa-solid fa-chart-column"></i> Période analysée :</strong> ${anneesAnalysees.join(' - ')} 
+                    <div style="border-radius: 8px; padding: 10px 15px; margin-bottom: 20px; text-align: center;">
+                        <strong><i class="fa-solid fa-calendar-check"></i> Période analysée :</strong> ${anneesAnalysees.join(' - ')} 
                         (${anneesAnalysees.length} année${anneesAnalysees.length > 1 ? 's' : ''})
-                        <span style="margin-left: 15px;">🎯 Prévision basée sur <strong>${derniereAnneeAnalysee}</strong></span>
+                        <span style="margin-left: 15px;"><i class="fa-solid fa-crosshairs"></i> Prévision basée sur <strong>${derniereAnneeAnalysee}</strong></span>
                     </div>
                     
                     <!-- Tableau principal -->
@@ -253,25 +256,21 @@ function calculer() {
                                 <tr style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white;">
                                     <th style="padding: 12px; border: 1px solid #dee2e6;">Mois</th>
                                     <th style="padding: 12px; border: 1px solid #dee2e6;">Moyenne mensuelle (AR)</th>
-                                    <th style="padding: 12px; border: 1px solid #dee2e6;">Données ${derniereAnneeAnalysee}</th>
                                     <th style="padding: 12px; border: 1px solid #dee2e6;">Coefficient saisonnier</th>
                                     <th style="padding: 12px; border: 1px solid #dee2e6;">Interprétation</th>
-                                    <th style="padding: 12px; border: 1px solid #dee2e6;">Prévision ${anneePrevision}</th>
+                                    <th style="padding: 12px; border: 1px solid #e6e0de;">Prévision ${anneePrevision}</th>
                                 </tr>
                             </thead>
                             <tbody>
             `;
             
             let totalPrevision = 0;
-            let totalDerniereAnnee = 0;
             
             for (let i = 0; i < 12; i++) {
                 const moyenne = parseFloat(stats.moyennes[i]).toLocaleString();
                 const coefficient = stats.coefficients[i];
-                const valeurDerniereAnnee = prevision.valeursDerniereAnnee[i];
                 const previsionMois = prevision.moisPrevisions[i];
                 totalPrevision += previsionMois;
-                totalDerniereAnnee += valeurDerniereAnnee;
                 
                 let interpretation = '';
                 let interpretationColor = '';
@@ -304,9 +303,6 @@ function calculer() {
                         <td style="padding: 10px; border: 1px solid #dee2e6; text-align: right; font-weight: 500;">
                             ${moyenne} AR
                         </td>
-                        <td style="padding: 10px; border: 1px solid #dee2e6; text-align: right; font-weight: 500; background: #fff3e0;">
-                            ${valeurDerniereAnnee.toLocaleString()} AR
-                        </td>
                         <td style="padding: 10px; border: 1px solid #dee2e6; text-align: center;">
                             <span style="background: ${coefficient > 1 ? '#fff3cd' : '#d1ecf1'}; 
                                          padding: 4px 8px; 
@@ -319,31 +315,33 @@ function calculer() {
                         <td style="padding: 10px; border: 1px solid #dee2e6; text-align: left;">
                             <span style="color: ${interpretationColor};">${interpretation}</span>
                         </td>
-                        <td style="padding: 10px; border: 1px solid #dee2e6; text-align: right; font-weight: bold; background: #e8f5e9;">
+                        <td style="padding: 10px; border: 1px solid #e6dede; text-align: right; font-weight: bold; background: #faf8e3;color: #c0352b;">
                             ${previsionMois.toLocaleString()} AR
                         </td>
                     </tr>
                 `;
             }
             
-            // Ligne de la moyenne générale
+            // Lignes des totaux
             html += `
                             </tbody>
                             <tfoot>
-                                <tr style="background-color: #e3f2fd; font-weight: bold;">
+                                <tr style="background-color: #faf8e3; font-weight: bold;">
                                     <td style="padding: 12px; border: 1px solid #dee2e6; text-align: left;">
-                                        <i class="fa-solid fa-chart-column"></i> TOTAUX
+                                        <i class="fa-solid fa-chart-column"></i> TOTAUX / MOYENNES
                                     </td>
                                     <td style="padding: 12px; border: 1px solid #dee2e6; text-align: right;">
-                                        ${parseFloat(stats.moyenne_generale * 12).toLocaleString()} AR
+                                        ${Math.round(moyenneAnnuelle).toLocaleString()} AR
                                     </td>
-                                    <td style="padding: 12px; border: 1px solid #dee2e6; text-align: right; background: #fff3e0;">
-                                        ${totalDerniereAnnee.toLocaleString()} AR
+                                    <td style="padding: 12px; border: 1px solid #dee2e6; text-align: center;">
+                                        <span style="background: #e8e8e8; padding: 4px 8px; border-radius: 20px; font-weight: bold;">
+                                            Total: ${totalCoefficients.toFixed(2)} | Moy: ${moyenneCoefficients}
+                                        </span>
                                     </td>
-                                    <td colspan="2" style="padding: 12px; border: 1px solid #dee2e6; text-align: center; color: #667eea;">
-                                        <i class="fa-solid fa-check"></i> Base: Moyenne générale = ${parseFloat(stats.moyenne_generale).toLocaleString()} AR
+                                    <td style="padding: 12px; border: 1px solid #dee2e6; text-align: center; color: #E25;">
+                                        <i class="fa-solid fa-check"></i> Moyenne général: ${parseFloat(stats.moyenne_generale).toLocaleString()} Ar/mois
                                     </td>
-                                    <td style="padding: 12px; border: 1px solid #dee2e6; text-align: right; background: #e8f5e9;">
+                                    <td style="padding: 12px; border: 1px solid #e6e2de; text-align: right; background: #faf8e3;">
                                         ${totalPrevision.toLocaleString()} AR
                                     </td>
                                 </tr>
@@ -352,8 +350,8 @@ function calculer() {
                     </div>
                     
                     <!-- Section Prévision Annuelle -->
-                    <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border-radius: 8px; padding: 20px; margin-bottom: 20px; color: white;">
-                        <h3 style="margin-bottom: 15px;">🔮 Prévision pour l'année ${anneePrevision}</h3>
+                    <div style="background: linear-gradient(135deg, #FFA62B 0%, #E25 100%); border-radius: 8px; padding: 20px; margin-bottom: 20px; color: white;">
+                        <h3 style="margin-bottom: 15px;"><i class="fa-solid fa-align-left"></i> Prévision pour l'année ${anneePrevision}</h3>
                         <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px;">
                             <div style="background: rgba(255,255,255,0.2); padding: 15px; border-radius: 8px; text-align: center;">
                                 <div style="font-size: 14px; opacity: 0.9;">Basé sur l'année</div>
@@ -364,14 +362,12 @@ function calculer() {
                                 <div style="font-size: 28px; font-weight: bold;">${totalPrevision.toLocaleString()} AR</div>
                             </div>
                             <div style="background: rgba(255,255,255,0.2); padding: 15px; border-radius: 8px; text-align: center;">
-                                <div style="font-size: 14px; opacity: 0.9;">Variation vs ${derniereAnneeAnalysee}</div>
-                                <div style="font-size: 28px; font-weight: bold; color: ${prevision.variation >= 0 ? '#90EE90' : '#FFB6C1'}">
-                                    ${prevision.variation >= 0 ? '+' : ''}${prevision.variation.toFixed(1)}%
-                                </div>
+                                <div style="font-size: 14px; opacity: 0.9;">Moyenne mensuelle prévue</div>
+                                <div style="font-size: 28px; font-weight: bold;">${Math.round(totalPrevision / 12).toLocaleString()} AR</div>
                             </div>
                             <div style="background: rgba(255,255,255,0.2); padding: 15px; border-radius: 8px; text-align: center;">
                                 <div style="font-size: 14px; opacity: 0.9;">Mois le plus favorable</div>
-                                <div style="font-size: 18px; font-weight: bold;">📅 ${prevision.meilleurMois}</div>
+                                <div style="font-size: 18px; font-weight: bold;"><i class="fa-solid fa-calendar-days"></i> ${prevision.meilleurMois}</div>
                                 <div style="font-size: 14px;">${prevision.meilleureValeur.toLocaleString()} AR</div>
                             </div>
                         </div>
@@ -379,43 +375,16 @@ function calculer() {
                     
                     <!-- Graphique comparatif -->
                     <div style="background: white; border-radius: 8px; padding: 20px; margin-bottom: 20px;">
-                        <h4><i class="fa-solid fa-chart-column"></i> Comparaison : ${derniereAnneeAnalysee} vs Prévision ${anneePrevision}</h4>
+                        <h4><i class="fa-solid fa-chart-column"></i> Prévisions mensuelles pour ${anneePrevision}</h4>
                         <canvas id="comparisonChart" style="max-height: 300px;"></canvas>
-                    </div>
-                    
-                    <!-- Graphique de prévision -->
-                    <div style="background: white; border-radius: 8px; padding: 20px; margin-bottom: 20px;">
-                        <h4><i class="fa-solid fa-chart-column"></i> Visualisation des prévisions mensuelles pour ${anneePrevision}</h4>
-                        <canvas id="previsionChart" style="max-height: 300px;"></canvas>
-                    </div>
-                    
-                    <!-- Légende -->
-                    <div style="margin-top: 20px; padding: 15px; background: #e3f2fd; border-radius: 8px;">
-                        <h4 style="margin-bottom: 10px;">📖 Méthode de prévision</h4>
-                        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 10px;">
-                            <div style="display: flex; align-items: center; gap: 10px;">
-                                <span style="background: #4caf50; width: 20px; height: 20px; border-radius: 4px;"></span>
-                                <span>Prévision = Valeur ${derniereAnneeAnalysee} × (Coefficient / Coefficient moyen)</span>
-                            </div>
-                            <div style="display: flex; align-items: center; gap: 10px;">
-                                <span style="background: #ff9800; width: 20px; height: 20px; border-radius: 4px;"></span>
-                                <span>Méthode : Projection saisonnière basée sur la dernière année</span>
-                            </div>
-                            <div style="display: flex; align-items: center; gap: 10px;">
-                                <span>💡</span>
-                                <span>La prévision respecte la structure saisonnière de l'année ${derniereAnneeAnalysee}</span>
-                            </div>
-                        </div>
                     </div>
                 </div>
             `;
             
             resultContainer.innerHTML = html;
             
-            // Créer les graphiques
-            creerGraphiquePrevision(moisNoms, prevision.moisPrevisions);
-            creerGraphiqueComparaison(moisNoms, prevision.valeursDerniereAnnee, prevision.moisPrevisions, derniereAnneeAnalysee, anneePrevision);
-            
+ // Créer le graphique comparatif
+            creerGraphiqueComparatif(moisNoms, prevision.valeursDerniereAnnee, prevision.moisPrevisions, derniereAnneeAnalysee, anneePrevision);
         } else {
             resultContainer.innerHTML = `<div class="error"><i class="fa-regular fa-circle-xmark"></i> Erreur: ${result.error}</div>`;
         }
@@ -423,6 +392,106 @@ function calculer() {
     .catch(error => {
         console.error('Erreur:', error);
         resultContainer.innerHTML = '<div class="error"><i class="fa-regular fa-circle-xmark"></i> Erreur lors du calcul</div>';
+    });
+}
+
+// Fonction pour le graphique comparatif
+function creerGraphiqueComparatif(moisNoms, valeursReelles, previsions, anneeReelle, anneePrevision) {
+    const canvas = document.getElementById('comparisonChart');
+    if (!canvas) return;
+    
+    if (window.comparisonChart && typeof window.comparisonChart.destroy === 'function') {
+        try {
+            window.comparisonChart.destroy();
+        } catch(e) {}
+    }
+    
+    const ctx = canvas.getContext('2d');
+    
+    window.comparisonChart = new Chart(ctx, {
+        type: 'line',
+        data: {
+            labels: moisNoms,
+            datasets: [
+                {
+                    label: `Année ${anneeReelle} (réel)`,
+                    data: valeursReelles,
+                    borderColor: '#FFA62B',
+                    backgroundColor: 'rgba(255, 166, 43, 0.1)',
+                    borderWidth: 3,
+                    tension: 0.4,
+                    fill: true,
+                    pointRadius: 5,
+                    pointHoverRadius: 7,
+                    pointBackgroundColor: '#FFA62B',
+                    pointBorderColor: '#fff',
+                    pointBorderWidth: 2
+                },
+                {
+                    label: `Prévision ${anneePrevision}`,
+                    data: previsions,
+                    borderColor: '#E25C2B',
+                    backgroundColor: 'rgba(226, 92, 43, 0.1)',
+                    borderWidth: 3,
+                    borderDash: [5, 5],
+                    tension: 0.4,
+                    fill: true,
+                    pointRadius: 5,
+                    pointHoverRadius: 7,
+                    pointBackgroundColor: '#E25C2B',
+                    pointBorderColor: '#fff',
+                    pointBorderWidth: 2
+                }
+            ]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: true,
+            plugins: {
+                tooltip: {
+                    callbacks: {
+                        label: function(context) {
+                            return `${context.dataset.label}: ${context.raw.toLocaleString()} AR`;
+                        }
+                    }
+                },
+                legend: {
+                    position: 'top',
+                    labels: {
+                        usePointStyle: true,
+                        boxWidth: 10
+                    }
+                }
+            },
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    title: {
+                        display: true,
+                        text: 'Montant (AR)',
+                        font: { weight: 'bold' }
+                    },
+                    ticks: {
+                        callback: function(value) {
+                            return value.toLocaleString();
+                        }
+                    },
+                    grid: {
+                        color: 'rgba(0,0,0,0.05)'
+                    }
+                },
+                x: {
+                    title: {
+                        display: true,
+                        text: 'Mois',
+                        font: { weight: 'bold' }
+                    },
+                    grid: {
+                        display: false
+                    }
+                }
+            }
+        }
     });
 }
 
@@ -492,161 +561,6 @@ function calculerPrevisionAvecDerniereAnnee(stats, data, derniereAnneeAnalysee) 
     };
 }
 
-// ========== GRAPHIQUE DE PRÉVISION SIMPLE ==========
-function creerGraphiquePrevision(moisNoms, previsions) {
-    const canvas = document.getElementById('previsionChart');
-    if (!canvas) return;
-    
-    // Nettoyer l'ancien graphique s'il existe
-    if (window.previsionChart && typeof window.previsionChart.destroy === 'function') {
-        try {
-            window.previsionChart.destroy();
-        } catch(e) {}
-    }
-    
-    const ctx = canvas.getContext('2d');
-    
-    // Couleurs pour les barres
-    const backgroundColors = previsions.map(val => {
-        if (val > Math.max(...previsions) * 0.8) return '#dc3545';
-        if (val > Math.max(...previsions) * 0.6) return '#ff9800';
-        if (val < Math.min(...previsions) * 1.2) return '#28a745';
-        return '#17a2b8';
-    });
-    
-    window.previsionChart = new Chart(ctx, {
-        type: 'bar',
-        data: {
-            labels: moisNoms,
-            datasets: [{
-                label: 'Prévision (AR)',
-                data: previsions,
-                backgroundColor: backgroundColors,
-                borderColor: '#ffffff',
-                borderWidth: 1,
-                borderRadius: 5
-            }]
-        },
-        options: {
-            responsive: true,
-            maintainAspectRatio: true,
-            plugins: {
-                legend: {
-                    display: false
-                },
-                tooltip: {
-                    callbacks: {
-                        label: function(context) {
-                            return `Prévision: ${context.raw.toLocaleString()} AR`;
-                        }
-                    }
-                }
-            },
-            scales: {
-                y: {
-                    beginAtZero: true,
-                    title: {
-                        display: true,
-                        text: 'Montant prévu (AR)'
-                    },
-                    ticks: {
-                        callback: function(value) {
-                            return value.toLocaleString();
-                        }
-                    }
-                },
-                x: {
-                    title: {
-                        display: true,
-                        text: 'Mois'
-                    }
-                }
-            }
-        }
-    });
-}
-
-// ========== GRAPHIQUE COMPARATIF ==========
-function creerGraphiqueComparaison(moisNoms, valeursReelles, previsions, anneeReelle, anneePrevision) {
-    const canvas = document.getElementById('comparisonChart');
-    if (!canvas) return;
-    
-    // Nettoyer l'ancien graphique s'il existe
-    if (window.comparisonChart && typeof window.comparisonChart.destroy === 'function') {
-        try {
-            window.comparisonChart.destroy();
-        } catch(e) {}
-    }
-    
-    const ctx = canvas.getContext('2d');
-    
-    window.comparisonChart = new Chart(ctx, {
-        type: 'line',
-        data: {
-            labels: moisNoms,
-            datasets: [
-                {
-                    label: `Année ${anneeReelle} (réel)`,
-                    data: valeursReelles,
-                    borderColor: '#667eea',
-                    backgroundColor: 'rgba(102, 126, 234, 0.1)',
-                    tension: 0.4,
-                    fill: true,
-                    pointRadius: 4,
-                    pointHoverRadius: 6
-                },
-                {
-                    label: `Prévision ${anneePrevision}`,
-                    data: previsions,
-                    borderColor: '#ff9800',
-                    backgroundColor: 'rgba(255, 152, 0, 0.1)',
-                    borderDash: [5, 5],
-                    tension: 0.4,
-                    fill: true,
-                    pointRadius: 4,
-                    pointHoverRadius: 6
-                }
-            ]
-        },
-        options: {
-            responsive: true,
-            maintainAspectRatio: true,
-            plugins: {
-                tooltip: {
-                    callbacks: {
-                        label: function(context) {
-                            return `${context.dataset.label}: ${context.raw.toLocaleString()} AR`;
-                        }
-                    }
-                },
-                legend: {
-                    position: 'top'
-                }
-            },
-            scales: {
-                y: {
-                    beginAtZero: true,
-                    title: {
-                        display: true,
-                        text: 'Montant (AR)'
-                    },
-                    ticks: {
-                        callback: function(value) {
-                            return value.toLocaleString();
-                        }
-                    }
-                },
-                x: {
-                    title: {
-                        display: true,
-                        text: 'Mois'
-                    }
-                }
-            }
-        }
-    });
-}
-
 // Initialisation au chargement
 document.addEventListener('DOMContentLoaded', function() {
     // Mettre à jour la liste des années disponibles
@@ -696,11 +610,9 @@ document.addEventListener('DOMContentLoaded', function() {
 // Fonction pour le toggle des modes
 function toggleChargementMode() {
     const mode = document.getElementById('chargementType').value;
-    const singleMode = document.getElementById('singleMode');
     const rangeMode = document.getElementById('rangeMode');
     const allMode = document.getElementById('allMode');
     
-    if (singleMode) singleMode.style.display = mode === 'single' ? 'block' : 'none';
     if (rangeMode) rangeMode.style.display = mode === 'range' ? 'block' : 'none';
     if (allMode) allMode.style.display = mode === 'all' ? 'block' : 'none';
     
@@ -792,26 +704,75 @@ function creerGraphiques(stats) {
         // Destruction sécurisée
         evolutionChart = destroyChartSafely(evolutionChart);
         
+        // Créer un dégradé pour l'arrière-plan
+        const gradient1 = ctx1.createLinearGradient(0, 0, 0, 400);
+        gradient1.addColorStop(0, 'rgba(239, 83, 35, 0.4)');   // #ef5323 avec transparence
+        gradient1.addColorStop(0.5, 'rgba(251, 193, 77, 0.2)'); // #fbc14d avec transparence
+        gradient1.addColorStop(1, 'rgba(239, 83, 35, 0)');      // transparent
+        
         try {
             evolutionChart = new Chart(ctx1, {
                 type: 'line',
                 data: {
                     labels: stats.annees,
                     datasets: [{
-                        label: 'Total annuel (€)',
+                        label: 'Total annuel (Ar)',
                         data: stats.totaux_annuels,
-                        borderColor: '#667eea',
-                        backgroundColor: 'rgba(102, 126, 234, 0.1)',
+                        borderColor: '#ef5323',
+                        borderWidth: 3,
+                        backgroundColor: gradient1,
                         tension: 0.4,
-                        fill: true
+                        fill: true,
+                        pointBackgroundColor: '#ef5323',
+                        pointBorderColor: '#fff',
+                        pointBorderWidth: 2,
+                        pointRadius: 5,
+                        pointHoverRadius: 7,
+                        pointHoverBackgroundColor: '#fbc14d'
                     }]
                 },
                 options: {
                     responsive: true,
                     maintainAspectRatio: true,
                     plugins: {
-                        legend: { position: 'top' },
-                        title: { display: true, text: 'Évolution annuelle des revenus' }
+                        legend: { 
+                            position: 'top',
+                            labels: {
+                                font: { size: 12 },
+                                usePointStyle: true
+                            }
+                        },
+                        title: { 
+                            display: true, 
+                            text: 'Évolution annuelle des revenus',
+                            font: { size: 14, weight: 'bold' }
+                        },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    return `Total: ${context.raw.toLocaleString()} AR`;
+                                }
+                            }
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            grid: { color: 'rgba(0,0,0,0.05)' },
+                            title: {
+                                display: true,
+                                text: 'Montant (AR)',
+                                font: { weight: 'bold' }
+                            }
+                        },
+                        x: {
+                            grid: { display: false },
+                            title: {
+                                display: true,
+                                text: 'Années',
+                                font: { weight: 'bold' }
+                            }
+                        }
                     }
                 }
             });
@@ -835,24 +796,74 @@ function creerGraphiques(stats) {
         // Destruction sécurisée
         distributionChart = destroyChartSafely(distributionChart);
         
+        // Créer un dégradé pour les barres
+        const gradient2 = ctx2.createLinearGradient(0, 0, 0, 400);
+        gradient2.addColorStop(0, '#FFA62B');      // Orange clair
+        gradient2.addColorStop(0.5, '#E25C2B');    // Orange foncé
+        gradient2.addColorStop(1, '#C41E3A');      // Rouge
+        
         try {
             distributionChart = new Chart(ctx2, {
                 type: 'bar',
                 data: {
                     labels: ['Jan', 'Fév', 'Mar', 'Avr', 'Mai', 'Juin', 'Juil', 'Aoû', 'Sep', 'Oct', 'Nov', 'Déc'],
                     datasets: [{
-                        label: 'Moyenne mensuelle (€)',
+                        label: 'Moyenne mensuelle (Ar)',
                         data: stats.moyennes_mensuelles,
-                        backgroundColor: '#b7e34f',
-                        borderRadius: 5
+                        backgroundColor: gradient2,
+                        borderRadius: 8,
+                        borderWidth: 0,
+                        barPercentage: 0.7,
+                        categoryPercentage: 0.8
                     }]
                 },
                 options: {
                     responsive: true,
                     maintainAspectRatio: true,
                     plugins: {
-                        legend: { position: 'top' },
-                        title: { display: true, text: 'Distribution mensuelle moyenne' }
+                        legend: { 
+                            position: 'top',
+                            labels: {
+                                font: { size: 12 },
+                                usePointStyle: true
+                            }
+                        },
+                        title: { 
+                            display: true, 
+                            text: 'Distribution mensuelle moyenne',
+                            font: { size: 14, weight: 'bold' }
+                        },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    return `Moyenne: ${context.raw.toLocaleString()} AR`;
+                                }
+                            }
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            grid: { color: 'rgba(0,0,0,0.05)' },
+                            title: {
+                                display: true,
+                                text: 'Montant moyen (AR)',
+                                font: { weight: 'bold' }
+                            },
+                            ticks: {
+                                callback: function(value) {
+                                    return value.toLocaleString();
+                                }
+                            }
+                        },
+                        x: {
+                            grid: { display: false },
+                            title: {
+                                display: true,
+                                text: 'Mois',
+                                font: { weight: 'bold' }
+                            }
+                        }
                     }
                 }
             });
@@ -1002,7 +1013,7 @@ function afficherTableauCrud() {
         // Cellule Année
         const cellAnnee = row.insertCell(0);
         cellAnnee.innerHTML = `<strong style="font-size: 16px;">${annee}</strong>`;
-        cellAnnee.style.backgroundColor = '#e3f2fd';
+        cellAnnee.style.backgroundColor = '#faf8e3';
         cellAnnee.style.textAlign = 'center';
         
         // Cellules des 12 mois
@@ -1094,11 +1105,12 @@ function supprimerAnneeCrud(annee) {
 
 // ========== SAUVEGARDER TOUTES LES DONNÉES ==========
 async function sauvegarderToutesDonneesCrud() {
-    if (!crudModified && Object.keys(crudData).length > 0) {
-        if (!confirm("Aucune modification détectée. Voulez-vous quand même sauvegarder ?")) {
-            return;
-        }
-    }
+    const sauvegardeBtn = event.target;
+    const originalText = sauvegardeBtn.innerHTML;
+    
+    // Désactiver le bouton
+    sauvegardeBtn.disabled = true;
+    sauvegardeBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Sauvegarde...';
     
     const resultContainer = document.getElementById('resultContainer');
     if (resultContainer) {
@@ -1115,28 +1127,39 @@ async function sauvegarderToutesDonneesCrud() {
         const result = await response.json();
         
         if (result.success) {
+            // CHANGEMENT IMMÉDIAT
             crudModified = false;
             
+            // Enlever les styles de modification de tous les inputs
+            document.querySelectorAll('#crudDataTable input').forEach(input => {
+                input.style.backgroundColor = '';
+                input.style.borderColor = '#ced4da';
+            });
+            
+            // Mettre à jour les stats immédiatement
+            mettreAJourStatsCrud();
+            
             if (resultContainer) {
-                resultContainer.innerHTML = '<div class="alert alert-success show"><i class="fa-solid fa-check"></i> Toutes les données ont été sauvegardées avec succès !</div>';
+                resultContainer.innerHTML = '<div class="alert alert-success show">✅ Sauvegarde réussie !</div>';
                 setTimeout(() => {
                     resultContainer.innerHTML = '';
-                }, 3000);
+                }, 2000);
             }
-            
-            alert("Sauvegarde réussie !");
-            
-            // Recharger l'affichage pour enlever les marques de modification
-            afficherTableauCrud();
         } else {
             throw new Error(result.error);
         }
     } catch (error) {
         console.error('Erreur sauvegarde:', error);
         if (resultContainer) {
-            resultContainer.innerHTML = `<div class="alert alert-error show"><i class="fa-regular fa-circle-xmark"></i> Erreur: ${error.message}</div>`;
+            resultContainer.innerHTML = `<div class="alert alert-error show"><i class="fa-solid fa-xmark"></i> Erreur: ${error.message}</div>`;
+            setTimeout(() => {
+                resultContainer.innerHTML = '';
+            }, 3000);
         }
-        alert("Erreur lors de la sauvegarde : " + error.message);
+    } finally {
+        // Réactiver le bouton
+        sauvegardeBtn.disabled = false;
+        sauvegardeBtn.innerHTML = originalText;
     }
 }
 
@@ -1151,10 +1174,10 @@ function mettreAJourStatsCrud() {
     
     // Changer la couleur si modifications non sauvegardées
     if (crudModified) {
-        statsSpan.style.color = '#ff9800';
+        statsSpan.style.color = '#c0352b';
         statsSpan.style.fontWeight = 'bold';
     } else {
-        statsSpan.style.color = '';
+        statsSpan.style.color = '#ff5b45';
         statsSpan.style.fontWeight = '';
     }
 }
